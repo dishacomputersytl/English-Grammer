@@ -1,25 +1,521 @@
-
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>English Grammar Guru</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-  <script type="importmap">
-{
-  "imports": {
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.28.0",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
-  }
-}
-</script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disha Computer (Skills Messenger)</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5a623;
+            --background-color: #f8f9fa;
+            --text-color: #333;
+            --white-color: #fff;
+            --error-color: #d0021b;
+            --success-color: #7ed321;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: var(--white-color);
+            padding: 1rem;
+            text-align: center;
+        }
+
+        main {
+            flex-grow: 1;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        footer {
+            background-color: #333;
+            color: var(--white-color);
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 2rem;
+            background-color: var(--white-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .auth-container h2 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .auth-form input {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .auth-form button {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--primary-color);
+            color: var(--white-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .auth-form button:hover {
+            background-color: #357abd;
+        }
+
+        .toggle-auth {
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .toggle-auth button {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 800px;
+            height: 600px;
+            background-color: var(--white-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: none; /* Initially hidden */
+            flex-direction: row;
+        }
+
+        .user-list {
+            width: 250px;
+            border-right: 1px solid #eee;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .user-list li {
+            padding: 0.5rem;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .user-list li:hover {
+            background-color: #f0f0f0;
+        }
+
+        .chat-window {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .messages {
+            flex-grow: 1;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .message-input {
+            display: flex;
+            padding: 1rem;
+            border-top: 1px solid #eee;
+        }
+
+        .message-input input {
+            flex-grow: 1;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .message-input button {
+            margin-left: 0.5rem;
+            padding: 0.5rem 1rem;
+            background-color: var(--primary-color);
+            color: var(--white-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #logout-btn {
+            background-color: var(--error-color);
+            padding: 0.5rem 1rem;
+            color: var(--white-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        /* Admin View */
+        .admin-container {
+            display: none; /* Initially hidden */
+            width: 100%;
+            max-width: 1200px;
+            padding: 2rem;
+            background-color: var(--white-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .admin-container h2 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .admin-dashboard {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+        }
+
+        #admin-user-list, #admin-conversation-view {
+            height: 500px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            padding: 1rem;
+        }
+
+        #admin-user-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+    </style>
 </head>
-  <body class="bg-gray-900 text-gray-100">
-    <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-  </body>
+<body>
+    <header>
+        <h1>Disha Computer (Skills Messenger)</h1>
+    </header>
+    <main id="app">
+        <!-- Login View -->
+        <div id="login-view" class="auth-container">
+            <h2>Login</h2>
+            <form id="login-form" class="auth-form">
+                <input type="email" id="login-email" placeholder="Email" required>
+                <input type="password" id="login-password" placeholder="Password" required>
+                <button type="submit">Login</button>
+            </form>
+            <div class="toggle-auth">
+                <p>Don't have an account? <button id="show-signup">Sign Up</button></p>
+            </div>
+        </div>
+
+        <!-- Signup View -->
+        <div id="signup-view" class="auth-container" style="display: none;">
+            <h2>Sign Up</h2>
+            <form id="signup-form" class="auth-form">
+                <input type="text" id="signup-name" placeholder="Full Name" required>
+                <input type="email" id="signup-email" placeholder="Email" required>
+                <input type="password" id="signup-password" placeholder="Password" required>
+                <button type="submit">Sign Up</button>
+            </form>
+            <div class="toggle-auth">
+                <p>Already have an account? <button id="show-login">Login</button></p>
+            </div>
+        </div>
+
+        <!-- Chat View -->
+        <div id="chat-view" class="chat-container">
+            <div class="user-list">
+                <h3>Students</h3>
+                <ul id="users">
+                    <!-- User list will be populated here -->
+                </ul>
+            </div>
+            <div class="chat-window">
+                <div class="chat-header">
+                    <h3 id="chat-with">Select a student to chat</h3>
+                    <button id="logout-btn">Logout</button>
+                </div>
+                <div class="messages" id="messages">
+                    <!-- Messages will be displayed here -->
+                </div>
+                <div class="message-input">
+                    <input type="text" id="message-text" placeholder="Type a message...">
+                    <button id="send-message">Send</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin View -->
+        <div id="admin-view" class="admin-container">
+            <h2>Admin Dashboard</h2>
+            <div class="admin-dashboard">
+                <div id="admin-user-list-container">
+                    <h3>All Users</h3>
+                    <ul id="admin-user-list">
+                    </ul>
+                </div>
+                <div id="admin-conversation-view">
+                    <h3>Conversation</h3>
+                </div>
+            </div>
+        </div>
+
+    </main>
+    <footer>
+        <p>&copy; 2024 Disha Computer. All rights reserved.</p>
+    </footer>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+        import {
+            getAuth,
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
+            onAuthStateChanged,
+            signOut
+        } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+        import {
+            getFirestore,
+            doc,
+            setDoc,
+            getDoc,
+            collection,
+            query,
+            where,
+            onSnapshot,
+            addDoc,
+            orderBy,
+            serverTimestamp,
+            deleteDoc
+        } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBHDZ2tdu3CX17d5xbD_Y5jPiGyI-JffNo",
+            authDomain: "dishamassenger.firebaseapp.com",
+            projectId: "dishamassenger",
+            storageBucket: "dishamassenger.firebasestorage.app",
+            messagingSenderId: "791414659616",
+            appId: "1:791414659616:web:97944d2dbb2c73c826ba45"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Views
+        const loginView = document.getElementById('login-view');
+        const signupView = document.getElementById('signup-view');
+        const chatView = document.getElementById('chat-view');
+        const adminView = document.getElementById('admin-view');
+
+        // Buttons
+        const showSignupBtn = document.getElementById('show-signup');
+        const showLoginBtn = document.getElementById('show-login');
+        const logoutBtn = document.getElementById('logout-btn');
+        const sendMessageBtn = document.getElementById('send-message');
+
+        // Forms
+        const loginForm = document.getElementById('login-form');
+        const signupForm = document.getElementById('signup-form');
+
+        // Chat elements
+        const usersList = document.getElementById('users');
+        const chatWith = document.getElementById('chat-with');
+        const messagesDiv = document.getElementById('messages');
+        const messageText = document.getElementById('message-text');
+
+        // Admin elements
+        const adminUserList = document.getElementById('admin-user-list');
+        const adminConversationView = document.getElementById('admin-conversation-view');
+
+        let currentChatUser = null;
+
+        showSignupBtn.addEventListener('click', () => {
+            loginView.style.display = 'none';
+            signupView.style.display = 'block';
+        });
+
+        showLoginBtn.addEventListener('click', () => {
+            signupView.style.display = 'none';
+            loginView.style.display = 'block';
+        });
+
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('signup-name').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                await setDoc(doc(db, "users", user.uid), {
+                    name: name,
+                    email: email,
+                    role: "student",
+                    createdAt: new Date()
+                });
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+
+        sendMessageBtn.addEventListener('click', async () => {
+            const text = messageText.value;
+            if (text.trim() === '' || !currentChatUser) return;
+
+            const currentUser = auth.currentUser;
+            if (currentUser) {
+                const conversationId = [currentUser.uid, currentChatUser.id].sort().join('_');
+                await addDoc(collection(db, "messages", conversationId, "chats"), {
+                    text: text,
+                    senderId: currentUser.uid,
+                    receiverId: currentChatUser.id,
+                    createdAt: serverTimestamp()
+                });
+                messageText.value = '';
+            }
+        });
+
+        function loadUsers() {
+            const q = query(collection(db, "users"), where("role", "==", "student"));
+            onSnapshot(q, (snapshot) => {
+                usersList.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const user = { id: doc.id, ...doc.data() };
+                    if (auth.currentUser && auth.currentUser.uid === user.id) return;
+                    const li = document.createElement('li');
+                    li.textContent = user.name;
+                    li.addEventListener('click', () => {
+                        currentChatUser = user;
+                        chatWith.textContent = `Chat with ${user.name}`;
+                        loadMessages();
+                    });
+                    usersList.appendChild(li);
+                });
+            });
+        }
+
+        function loadMessages() {
+            if (!currentChatUser) return;
+            const currentUser = auth.currentUser;
+            const conversationId = [currentUser.uid, currentChatUser.id].sort().join('_');
+            const q = query(collection(db, "messages", conversationId, "chats"), orderBy("createdAt"));
+
+            onSnapshot(q, (snapshot) => {
+                messagesDiv.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const message = doc.data();
+                    const p = document.createElement('p');
+                    p.textContent = `${message.senderId === currentUser.uid ? 'You' : currentChatUser.name}: ${message.text}`;
+                    messagesDiv.appendChild(p);
+                });
+            });
+        }
+
+        function loadAllUsersForAdmin() {
+            const q = query(collection(db, "users"));
+            onSnapshot(q, (snapshot) => {
+                adminUserList.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const user = { id: doc.id, ...doc.data() };
+                    const li = document.createElement('li');
+                    li.textContent = `${user.name} (${user.email})`;
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = 'Delete';
+                    deleteBtn.style.backgroundColor = 'var(--error-color)';
+                    deleteBtn.style.color = 'var(--white-color)';
+                    deleteBtn.style.border = 'none';
+                    deleteBtn.style.padding = '0.25rem 0.5rem';
+                    deleteBtn.style.borderRadius = '4px';
+                    deleteBtn.style.cursor = 'pointer';
+                    deleteBtn.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        if (confirm(`Are you sure you want to delete ${user.name}'s account?`)) {
+                            await deleteDoc(doc(db, "users", user.id));
+                            // Note: This does not delete the user from Firebase Auth.
+                            // That requires a backend function.
+                        }
+                    });
+
+                    li.appendChild(deleteBtn);
+                    li.addEventListener('click', () => {
+                        // Load conversations for this user
+                    });
+                    adminUserList.appendChild(li);
+                });
+            });
+        }
+
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    if (userData.role === 'admin') {
+                        adminView.style.display = 'block';
+                        loadAllUsersForAdmin();
+                    } else {
+                        chatView.style.display = 'flex';
+                        loadUsers();
+                    }
+                    loginView.style.display = 'none';
+                    signupView.style.display = 'none';
+                }
+            } else {
+                loginView.style.display = 'block';
+                signupView.style.display = 'none';
+                chatView.style.display = 'none';
+                adminView.style.display = 'none';
+            }
+        });
+    </script>
+</body>
 </html>
